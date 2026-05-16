@@ -6,9 +6,10 @@ Thank you for your interest in contributing to Conn! We welcome contributions fr
 
 ### For GSSoC 2026 Participants
 
-1. **Fork the repository** on GitHub
-2. **Star the repository** (optional but appreciated!)
-3. **Clone your fork** locally:
+1. **Follow Up**
+2. **Fork the repository** on GitHub
+3. **Star the repository** (optional but appreciated!)
+4. **Clone your fork** locally:
    ```bash
    git clone https://github.com/YOUR_USERNAME/Conn.git
    cd Conn
