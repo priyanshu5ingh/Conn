@@ -130,6 +130,25 @@ async function ensureUniqueUsername(baseName) {
   return `${username}-${Date.now()}`;
 }
 
+// ─── URL Validation Helper ───
+
+function isValidUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  
+  // Basic URL format validation
+  const urlRegex = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
+  
+  if (!urlRegex.test(url)) return false;
+  
+  // Block dangerous protocols
+  const dangerousProtocols = ['javascript:', 'data:', 'file:', 'ftp:', 'blob:'];
+  const protocol = url.toLowerCase().split(':')[0] + ':';
+  
+  if (dangerousProtocols.includes(protocol)) return false;
+  
+  return true;
+}
+
 // ─── Contact Form Rate Limiter ───
 const contactRateLimits = new Map();
 
@@ -569,6 +588,15 @@ app.post('/api/links', requireAuth, async (req, res) => {
     .select('*', { count: 'exact', head: true })
     .eq('user_id', req.auth.userId);
 
+  // Validate URL
+  const url = req.body.url;
+  if (!url || url === 'https://') {
+    return res.status(400).json({ error: 'Please provide a valid URL.' });
+  }
+  if (!isValidUrl(url)) {
+    return res.status(400).json({ error: 'Invalid URL format. Please enter a valid URL starting with http:// or https://.' });
+  }
+
   // Validate scheduling dates
   const scheduledStart = req.body.scheduled_start ? new Date(req.body.scheduled_start) : null;
   const scheduledEnd = req.body.scheduled_end ? new Date(req.body.scheduled_end) : null;
@@ -583,7 +611,7 @@ app.post('/api/links', requireAuth, async (req, res) => {
     id: newLinkId,
     user_id: req.auth.userId,
     title: req.body.title || 'New Link',
-    url: req.body.url || 'https://',
+    url: url,
     icon: req.body.icon || 'link',
     clicks: 0,
     active: true,
@@ -626,7 +654,19 @@ app.put('/api/links/:id', requireAuth, async (req, res) => {
 
   const updates = {};
   if (req.body.title !== undefined) updates.title = req.body.title;
-  if (req.body.url !== undefined) updates.url = req.body.url;
+  
+  // Validate URL if it's being updated
+  if (req.body.url !== undefined) {
+    const url = req.body.url;
+    if (!url || url === 'https://') {
+      return res.status(400).json({ error: 'Please provide a valid URL.' });
+    }
+    if (!isValidUrl(url)) {
+      return res.status(400).json({ error: 'Invalid URL format. Please enter a valid URL starting with http:// or https://.' });
+    }
+    updates.url = url;
+  }
+  
   if (req.body.icon !== undefined) updates.icon = req.body.icon;
   if (req.body.active !== undefined) updates.active = req.body.active;
   if (req.body.order !== undefined) updates.display_order = req.body.order;

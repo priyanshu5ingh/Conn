@@ -82,6 +82,24 @@
     }, 3000);
   }
 
+  // ─── URL Validation Helper ───
+  function isValidUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    
+    // Basic URL format validation
+    const urlRegex = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
+    
+    if (!urlRegex.test(url)) return false;
+    
+    // Block dangerous protocols
+    const dangerousProtocols = ['javascript:', 'data:', 'file:', 'ftp:', 'blob:'];
+    const protocol = url.toLowerCase().split(':')[0] + ':';
+    
+    if (dangerousProtocols.includes(protocol)) return false;
+    
+    return true;
+  }
+
   // ═══════════ LINKS ═══════════
 
   async function loadLinks() {
@@ -290,6 +308,12 @@
     const url = document.getElementById('modalLinkUrl').value.trim();
     if (!title || !url) { showToast('Please fill in both title and URL', 'error'); return; }
 
+    // Validate URL format
+    if (!isValidUrl(url)) {
+      showToast('Invalid URL format. Please enter a valid URL starting with http:// or https://.', 'error');
+      return;
+    }
+
     // Get scheduling data
     const isScheduled = document.getElementById('modalEnableSchedule').checked;
     const scheduledStart = document.getElementById('modalScheduleStart').value;
@@ -319,19 +343,27 @@
     };
 
     try {
+      let response;
       if (currentEditId) {
-        await fetch(`/api/links/${currentEditId}`, {
+        response = await fetch(`/api/links/${currentEditId}`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(linkData)
         });
-        showToast('Link updated!');
       } else {
-        await fetch('/api/links', {
+        response = await fetch('/api/links', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(linkData)
         });
-        showToast('Link added!');
       }
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        showToast(data.error || 'Failed to save link', 'error');
+        return;
+      }
+
+      showToast(currentEditId ? 'Link updated!' : 'Link added!');
       closeModal();
       loadLinks();
       reloadPreview();
