@@ -62,6 +62,9 @@ Three tiers with Razorpay payment integration — upgrade seamlessly from Free �
 ### 🔐 Secure Auth
 JWT-based authentication with httpOnly cookies. No sessions stored in memory — works flawlessly on serverless platforms like Vercel.
 
+### 🛡️ URL Validation
+Comprehensive URL validation to prevent XSS attacks and malicious URLs. Blocks dangerous protocols (javascript:, data:, file:, etc.) and ensures only valid http:// and https:// URLs are stored.
+
 ### 🌐 Public Profile URLs
 Every user gets a shareable public page at `/u/username` with a unique aesthetic, social icons, and their curated links.
 
